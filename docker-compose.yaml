@@ -1,0 +1,71 @@
+version: "3.8"
+
+networks:
+  rotten-potatoes-ms-net:
+    driver: bridge
+
+services:
+
+  rotten-potatoes-ms:
+    image: norbertosantos/rotten-potatoes-ms:${TAG}
+    ports:
+      - 5000:5000
+    networks:
+      - rotten-potatoes-ms-net
+    depends_on:
+      - movie
+      - review
+    environment:
+      MOVIE_SERVICE_URI: ${MOVIE_SERVICE_URI}
+      REVIEW_SERVICE_URI: ${REVIEW_SERVICE_URI}
+  
+  movie:
+    image: norbertosantos/movie:${TAG}
+    ports:
+      - 8081:80
+    networks:
+      - rotten-potatoes-ms-net
+    depends_on:
+      - mongo
+    environment:
+      MONGODB_URI: ${MONGODB_URI}
+  
+  review:
+    image: norbertosantos/review:${TAG}
+    ports:
+      - 8082:80
+    networks:
+      - rotten-potatoes-ms-net
+    depends_on:
+      - postgres
+    environment:
+      ConnectionStrings__MyConnection: ${CONNECTIONSTRING_PG}
+  
+  mongo:
+    image: mongo:4.4.3
+    restart: always
+    ports:
+      - 27017:27017
+    networks:
+      - rotten-potatoes-ms-net
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_INITDB_ROOT_USERNAME}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_INITDB_ROOT_PASSWORD}
+    volumes:
+      - mongo_rotten_potatoes_ms_vol:${MONGODB_VOLUME}
+  
+  postgres:
+    image: postgres:11
+    ports:
+      - 5432:5432
+    networks:
+      - rotten-potatoes-ms-net
+    environment:
+      POSTGRES_USER: pguser
+      POSTGRES_PASSWORD: Pg@123
+    volumes:
+      - postgres_rotten_potatoes_ms_vol:${PG_VOLUME}  
+
+volumes: 
+  mongo_rotten_potatoes_ms_vol:
+  postgres_rotten_potatoes_ms_vol:
